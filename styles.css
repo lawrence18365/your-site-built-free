@@ -3692,3 +3692,69 @@
         font-size: 0.9rem;
     }
 }
+/* --- Loading Screen Styles --- */
+
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0f172a; /* Dark background from benefits section */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+    pointer-events: auto; /* Allow interaction while visible */
+}
+
+.loading-logo .logo-icon {
+    /* Replicate header logo style, potentially larger */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px; /* Adjust size as needed */
+    height: 60px; /* Adjust size as needed */
+    background-color: var(--accent);
+    color: white;
+    border-radius: 12px; /* Match header logo */
+    font-size: 2.5rem; /* Adjust size as needed */
+    font-weight: 800; /* Match header logo */
+    line-height: 1;
+    /* Add subtle pulse animation */
+    animation: subtlePulse 2s infinite ease-in-out;
+}
+
+@keyframes subtlePulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
+/* Hide loading screen when body has 'loaded' class */
+body.loaded #loading-screen {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; /* Prevent interaction when hidden */
+}
+
+/* Main content initial state and transition */
+#main-content {
+    opacity: 0;
+    transition: opacity 0.5s 0.3s ease-in; /* Fade in slightly after loader fades out */
+}
+
+/* Show main content when body has 'loaded' class */
+body.loaded #main-content {
+    opacity: 1;
+}
+
+/* --- End Loading Screen Styles --- */
