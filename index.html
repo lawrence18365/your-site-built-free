@@ -301,29 +301,27 @@
         </div>
         
         <!-- Call To Action -->
-        <div class="features-cta">
-            <div class="cta-content">
-                <h3>Ready to transform your digital presence?</h3>
-                <p>Schedule a strategy session with our team to analyze your current site and discuss how we can build a high-performance digital platform that drives real business growth.</p>
-                <div class="cta-buttons">
-                    <a href="#strategy-session" class="btn-primary">Book Your Strategy Session</a>
-                    <a href="#portfolio" class="btn-secondary">View Our Portfolio</a>
+        <div class="streamlined-cta-module">
+            <div class="streamlined-cta-content">
+                <h3>Elevate your digital presence</h3>
+                <p>Our strategic approach combines cutting-edge design with performance optimization to deliver websites that drive measurable business results.</p>
+                <div class="streamlined-cta-actions">
+                    <a href="#strategy-session" class="streamlined-btn-primary">Schedule Consultation</a>
+                    <a href="#portfolio" class="streamlined-btn-outline">View Work</a>
                 </div>
             </div>
-            <div class="cta-social-proof">
-                <div class="logo-container">
-                    <img src="/api/placeholder/80/40" alt="Client logo 1" class="client-logo">
-                    <img src="/api/placeholder/80/40" alt="Client logo 2" class="client-logo">
-                    <img src="/api/placeholder/80/40" alt="Client logo 3" class="client-logo">
-                    <img src="/api/placeholder/80/40" alt="Client logo 4" class="client-logo">
+            <div class="streamlined-cta-metrics">
+                <div class="streamlined-metric-card">
+                    <span class="streamlined-metric-value">142%</span>
+                    <span class="streamlined-metric-label">Average conversion increase</span>
                 </div>
-                <p class="testimonial-highlight">"Working with this team was transformative for our business—our conversion rate increased by 142% within 3 months of launch."</p>
-                <div class="testimonial-author">
-                    <img src="/api/placeholder/50/50" alt="Testimonial author" class="testimonial-avatar">
-                    <div>
-                        <p class="author-name">Michael Thornton</p>
-                        <p class="author-title">CEO, Elevate Industries</p>
-                    </div>
+                <div class="streamlined-metric-card">
+                    <span class="streamlined-metric-value">2.7s</span>
+                    <span class="streamlined-metric-label">Average page load time</span>
+                </div>
+                <div class="streamlined-metric-card">
+                    <span class="streamlined-metric-value">97%</span>
+                    <span class="streamlined-metric-label">Client retention rate</span>
                 </div>
             </div>
         </div>
@@ -1193,7 +1191,7 @@
             <div class="footer-bottom">
                 <div class="footer-copyright">© 2025 Your Site Built Free. All Rights Reserved.</div>
                 <div class="footer-bottom-links">
-                    <a href="#" class="footer-bottom-link">Privacy Policy</a>
+                    <a href="#privacy-popup" class="footer-bottom-link" id="privacy-policy-link">Privacy Policy</a>
                     <a href="#" class="footer-bottom-link">Terms of Service</a>
                     <a href="#" class="footer-bottom-link">Cookie Policy</a>
                 </div>
@@ -1230,5 +1228,29 @@
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="script.js"></script>
+    <!-- Privacy Policy Pop-up -->
+    <div id="privacy-popup" class="privacy-popup">
+        <div class="privacy-popup-content">
+            <span class="close-button">&times;</span>
+            <h2>Privacy Policy</h2>
+            <div id="privacy-policy-text">
+                <!-- Placeholder for full privacy policy text -->
+                <p>Please insert your full privacy policy text here.</p>
+                <p>This section should contain detailed information about how you collect, use, protect, and handle user data.</p>
+                <p>Include details about:</p>
+                <ul>
+                    <li>Types of data collected</li>
+                    <li>How data is used</li>
+                    <li>Data protection measures</li>
+                    <li>Third-party sharing</li>
+                    <li>User rights</li>
+                    <li>Contact information</li>
+                </ul>
+                <p>Ensure this text is accurate and complies with relevant privacy laws (e.g., GDPR, CCPA).</p>
+            </div>
+            <button id="accept-privacy" class="btn btn-primary">Accept</button>
+        </div>
+    </div>
+
 </body>
 </html>
