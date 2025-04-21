@@ -163,22 +163,6 @@
     color: var(--gray);
 }
 
-.hero-stats {
-    display: flex;
-    gap: clamp(16px, 3vw, 30px);
-}
-
-.hero-stat {
-    text-align: center;
-}
-
-.hero-stat-number {
-    font-size: clamp(1.5rem, 3vw, 2.25rem);
-    font-weight: 800;
-    color: var(--primary);
-    line-height: 1;
-    margin-bottom: 4px;
-}
 
 .hero-stat-text {
     font-size: clamp(0.75rem, 1vw, 0.875rem);
