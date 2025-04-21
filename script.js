@@ -1,10 +1,32 @@
+// Debug for script load
+console.log('Script loaded at:', new Date().toISOString(), 'Script URL:', document.currentScript ? document.currentScript.src : 'inline');
+
+// Track number of script instances
+window._scriptInstanceCount = (window._scriptInstanceCount || 0) + 1;
+console.log('Script instance count:', window._scriptInstanceCount);
+
 /**
  * Main JavaScript file for website
  * Deployment-ready version
  */
 
+// Page Load ID for tracking
+const pageLoadId = Date.now() + '-' + Math.random().toString(36).substring(2, 15);
+console.log('Page initialized with ID:', pageLoadId);
+
+// Use global flags for initialization
+window.siteInitialized = window.siteInitialized || false;
+window.formValidationInitialized = window.formValidationInitialized || false;
+
 // Wait for the document to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Prevent multiple initializations using global flag
+    if (window.siteInitialized) {
+        console.warn('DOMContentLoaded handler called multiple times! Preventing re-initialization.', new Date().toISOString());
+        return;
+    }
+    window.siteInitialized = true;
+    console.log('DOMContentLoaded handler executed at:', new Date().toISOString());
     // Initialize all components
     initStickyHeader();
     initScrollHeaderVisibility();
@@ -298,15 +320,37 @@ function initCountdownTimer() {
  * Enhanced debugging for duplicate submissions
  */
 function initFormValidation() {
+    // Log call stack for debugging duplicate calls
+    console.log('initFormValidation called', new Error().stack);
+
+    // Global check to prevent multiple form validation initializations
+    if (window.formValidationInitialized) {
+        console.error('Form validation already initialized globally.', new Date().toISOString());
+        return;
+    }
+    window.formValidationInitialized = true;
+
     const form = document.getElementById('website-form');
     if (!form) {
         console.error('Form not found');
         return;
     }
-    
-    console.log('Form validation initialized at:', new Date().toISOString());
-    
-    // Enhanced submission tracking
+
+    // 1. Enhanced Event Listener Tracking
+    // Add a property to the form to track if the listener is already attached
+    if (form._hasSubmitListener) {
+        console.error('Form already has a submit listener attached! Possible duplicate initialization.', new Date().toISOString());
+        return; // Prevent attaching multiple listeners
+    }
+    form._hasSubmitListener = true;
+    console.log('Attaching form submit listener at:', new Date().toISOString());
+
+    // 3. Network Request Monitoring (Duplicate Check Setup)
+    // Maintain a log of recent submissions
+    const recentSubmissions = [];
+    const MAX_STORED_SUBMISSIONS = 10;
+
+    // Enhanced submission tracking (existing)
     let isSubmitting = false;
     let lastSubmissionTime = 0;
     const minimumTimeBetweenSubmissions = 2000; // 2 seconds in milliseconds
@@ -361,37 +405,40 @@ function initFormValidation() {
         return;
     }
     
-    // Store submission IDs in sessionStorage to prevent duplicates
-    const checkForDuplicateSubmission = (formData) => {
-        try {
-            // Create a unique key based on form data
-            const submissionKey = `${formData.name}|${formData.email}|${formData.phone}|${Date.now()}`;
-            const submissionHash = btoa(submissionKey); // Simple encoding
-            
-            // Check recent submissions (last 30 seconds)
-            const recentSubmissions = JSON.parse(sessionStorage.getItem('recentFormSubmissions') || '[]');
-            const isDuplicate = recentSubmissions.includes(submissionHash);
-            
-            if (isDuplicate) {
-                logDebug('DUPLICATE SUBMISSION DETECTED - PREVENTED');
-                return true;
-            }
-            
-            // Add this submission to recent list
-            recentSubmissions.push(submissionHash);
-            
-            // Only keep the last 10 submissions
-            if (recentSubmissions.length > 10) {
-                recentSubmissions.shift();
-            }
-            
-            sessionStorage.setItem('recentFormSubmissions', JSON.stringify(recentSubmissions));
-            return false;
-        } catch (error) {
-            console.error('Error in duplicate check:', error);
-            return false; // Allow submission if the check fails
+    // 3. Network Request Monitoring (Duplicate Check Function)
+    function checkDuplicateRequest(formData) {
+        const submissionKey = `${formData.name}|${formData.email}|${formData.phone}`;
+        const timestamp = Date.now();
+
+        // Check for duplicates within the last 5 seconds
+        const duplicateSubmission = recentSubmissions.find(entry => {
+            return entry.key === submissionKey &&
+                   (timestamp - entry.timestamp) < 5000; // 5 seconds
+        });
+
+        if (duplicateSubmission) {
+            console.error('POTENTIAL DUPLICATE REQUEST DETECTED (data similarity)', {
+                original: duplicateSubmission,
+                current: {key: submissionKey, timestamp, requestId: formData.requestId}
+            });
+            logDebug('POTENTIAL DUPLICATE REQUEST DETECTED (data similarity)'); // Also log to debug panel
+            return true;
         }
-    };
+
+        // Add this submission to the log
+        recentSubmissions.push({
+            key: submissionKey,
+            timestamp,
+            requestId: formData.requestId // Store the request ID with the submission
+        });
+
+        // Keep the log size reasonable
+        if (recentSubmissions.length > MAX_STORED_SUBMISSIONS) {
+            recentSubmissions.shift();
+        }
+
+        return false;
+    }
     
     // Add real-time validation as in your original code
     if (formFields.email) {
@@ -439,11 +486,14 @@ function initFormValidation() {
     // Enhanced submit handler with multiple safeguards
     form.addEventListener('submit', function(event) {
         event.preventDefault();
-        
+
+        // 4. Browser Performance Monitoring (Start)
+        const handlerStartTime = performance.now();
+
         const now = Date.now();
         logDebug(`Submit event triggered at ${new Date(now).toISOString()}`);
-        
-        // Prevent multiple rapid submissions
+
+        // Prevent multiple rapid submissions (existing check)
         if (isSubmitting) {
             logDebug('Submission already in progress, preventing duplicate');
             return;
@@ -468,14 +518,22 @@ function initFormValidation() {
             message: formFields.message ? formFields.message.value.trim() : '',
             // Add timestamps for debugging
             clientTimestamp: new Date().toISOString(),
-            clientTime: Date.now()
+            clientTime: Date.now(),
+            // 2. In-Depth Request Tracking (Add IDs to data)
+            pageLoadId: pageLoadId, // Add page load ID
+            requestId: Date.now() + '-' + Math.random().toString(36).substring(2, 15) // Generate and add request ID
         };
-        
+
+        // 2. In-Depth Request Tracking (Log IDs)
+        console.log(`Form submission attempt: ${formData.requestId} from page ${formData.pageLoadId}`);
+        logDebug(`Form submission attempt: ${formData.requestId} from page ${formData.pageLoadId}`); // Also log to debug panel
+
         logDebug(`Form data collected: ${JSON.stringify(formData)}`);
-        
-        // Check for duplicate submission based on data + time
-        if (checkForDuplicateSubmission(formData)) {
-            isSubmitting = false;
+
+        // 3. Network Request Monitoring (Call the check)
+        if (checkDuplicateRequest(formData)) {
+            logDebug('Preventing duplicate submission based on data similarity');
+            isSubmitting = false; // Ensure lock is released
             return;
         }
         
@@ -529,14 +587,21 @@ function initFormValidation() {
         // The webhook URL
         const webhookUrl = 'https://hook.eu2.make.com/ru1mnhhsxy2dzbavygmhr5th4j3harhx';
         logDebug(`Sending data to webhook: ${webhookUrl}`);
-        
+
+        // 4. Browser Performance Monitoring (End Handler Timing)
+        const handlerEndTime = performance.now();
+        console.log(`Form submission handler took ${handlerEndTime - handlerStartTime}ms to execute`);
+        logDebug(`Form submission handler took ${handlerEndTime - handlerStartTime}ms to execute`);
+
         // Send data to webhook
         fetch(webhookUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // Add a custom header to help identify duplicates
-                'X-Submission-Time': Date.now().toString()
+                // 2. In-Depth Request Tracking (Add Headers)
+                'X-Submission-Time': Date.now().toString(), // Keep existing header
+                'X-Request-ID': formData.requestId,
+                'X-Page-Load-ID': formData.pageLoadId
             },
             body: JSON.stringify(formData)
         })
@@ -586,11 +651,22 @@ function initFormValidation() {
             showNotification('Sorry, there was an error submitting your form. Please try again later.');
         })
         .finally(() => {
-            // Reset submission status after a small delay to prevent immediate resubmission
+            // 4. Browser Performance Monitoring (Total Time)
+            const totalTime = performance.now() - handlerStartTime;
+            console.log(`Total form submission process took ${totalTime}ms`);
+            logDebug(`Total form submission process took ${totalTime}ms`);
+
+            // Log if this took unusually long
+            if (totalTime > 1000) {
+                console.warn(`Form submission took over 1 second (${totalTime}ms), which might indicate performance issues`);
+                logDebug(`WARN: Form submission took over 1 second (${totalTime}ms)`);
+            }
+
+            // Reset submission status after a small delay (existing logic)
             setTimeout(() => {
                 isSubmitting = false;
                 logDebug('Submission lock released');
-            }, 1000);
+            }, 1000); // Keep existing delay
         });
     });
     
@@ -1378,23 +1454,4 @@ function initPrivacyPopup() {
     });
 }
 
-// Add the privacy popup initialization to the DOMContentLoaded listener
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all components
-    initStickyHeader();
-    initScrollHeaderVisibility();
-    initMobileNav();
-    initPortfolioSlider();
-    initCountdownTimer();
-    initFormValidation();
-    initFloatingCTA();
-    initSmoothScroll();
-    initScrollAnimations();
-    initNotifications();
-    initTestimonialSlider();
-    initFAQAccordion();
-    initParallaxEffects();
-    initFeatureAnimations();
-    initAnalyticsTracking();
-    initPrivacyPopup(); // Add this line to initialize the privacy popup
-});
+// Redundant DOMContentLoaded listener removed. All initializations are handled by the listener at the top of the file.
