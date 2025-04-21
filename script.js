@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initParallaxEffects();
     initFeatureAnimations();
     initAnalyticsTracking();
+    initPrivacyPopup(); // Initialize the privacy policy modal functionality
     initImageLoader(); // Add call to the new image loader function
 });
 
