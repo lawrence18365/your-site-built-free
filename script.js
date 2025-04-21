@@ -1470,44 +1470,36 @@ function initImageLoader() {
         return;
     }
 
-    const images = mainContent.querySelectorAll('img');
-    const totalImages = images.length;
-    let loadedImagesCount = 0;
+    const heroImage = document.getElementById('hero-image');
 
-    console.log(`Found ${totalImages} images to track.`);
-
-    if (totalImages === 0) {
-        console.log('No images found in #main-content. Marking as loaded.');
-        // Use a small timeout to allow the CSS transition to be visible even if no images
+    if (!heroImage) {
+        console.warn('Hero image with ID "hero-image" not found. Marking as loaded.');
+        // Use a small timeout to allow the CSS transition to be visible
         setTimeout(() => {
             body.classList.add('loaded');
         }, 100); // Small delay (e.g., 100ms)
         return;
     }
 
-    const imageLoaded = () => {
-        loadedImagesCount++;
-        console.log(`Image loaded/error (${loadedImagesCount}/${totalImages})`);
-        if (loadedImagesCount >= totalImages) {
-            console.log('All images loaded. Adding "loaded" class to body.');
-            // Add a slight delay before removing the loader for smoother transition
-            setTimeout(() => {
-                body.classList.add('loaded');
-            }, 300); // Delay can be adjusted (e.g., 300ms)
-        }
+    console.log('Found hero image. Tracking its load state.');
+
+    const heroImageLoaded = () => {
+        console.log('Hero image loaded or failed. Adding "loaded" class to body.');
+        // Add a slight delay before removing the loader for smoother transition
+        setTimeout(() => {
+            body.classList.add('loaded');
+        }, 300); // Delay can be adjusted (e.g., 300ms)
     };
 
-    images.forEach(img => {
-        // Check if image is already loaded (e.g., cached)
-        if (img.complete) {
-            console.log(`Image already complete: ${img.src}`);
-            imageLoaded();
-        } else {
-            img.addEventListener('load', imageLoaded);
-            img.addEventListener('error', () => {
-                console.warn(`Image failed to load: ${img.src}`);
-                imageLoaded(); // Count errors as "loaded" to not block the page forever
-            });
-        }
-    });
+    // Check if hero image is already loaded (e.g., cached)
+    if (heroImage.complete) {
+        console.log(`Hero image already complete: ${heroImage.src}`);
+        heroImageLoaded();
+    } else {
+        heroImage.addEventListener('load', heroImageLoaded);
+        heroImage.addEventListener('error', () => {
+            console.warn(`Hero image failed to load: ${heroImage.src}`);
+            heroImageLoaded(); // Count errors as "loaded" to not block the page forever
+        });
+    }
 }
