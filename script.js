@@ -569,3 +569,262 @@ document.addEventListener('DOMContentLoaded', function() {
     initNotifications();
     initScrollHeaderVisibility(); // Call the new function
 });
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation effects
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+    
+    // Observe all feature items
+    document.querySelectorAll('.feature-item, .features-intro, .features-cta').forEach(item => {
+        observer.observe(item);
+    });
+    
+    // Add parallax effect to background elements
+    window.addEventListener('scroll', function() {
+        const scrollPosition = window.scrollY;
+        
+        document.querySelector('.dot-pattern-1').style.transform = `translateY(${scrollPosition * 0.05}px)`;
+        document.querySelector('.dot-pattern-2').style.transform = `translateY(-${scrollPosition * 0.03}px)`;
+        document.querySelector('.blur-circle-1').style.transform = `translateY(${scrollPosition * 0.07}px)`;
+        document.querySelector('.blur-circle-2').style.transform = `translateY(-${scrollPosition * 0.04}px)`;
+    });
+});
+
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const track = document.getElementById('testimonialsTrack');
+    const slides = document.querySelectorAll('.testimonial-slide');
+    const prevButton = document.querySelector('.prev-testimonial');
+    const nextButton = document.querySelector('.next-testimonial');
+    const indicators = document.getElementById('testimonialIndicators');
+    
+    let currentSlide = 0;
+    const slideCount = slides.length;
+    
+    // Create indicator dots
+    for (let i = 0; i < slideCount; i++) {
+        const dot = document.createElement('div');
+        dot.classList.add('testimonial-dot');
+        if (i === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => goToSlide(i));
+        indicators.appendChild(dot);
+    }
+    
+    // Update dots when slide changes
+    function updateDots() {
+        const dots = document.querySelectorAll('.testimonial-dot');
+        dots.forEach((dot, index) => {
+            if (index === currentSlide) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+    
+    // Move to specific slide
+    function goToSlide(slideIndex) {
+        currentSlide = slideIndex;
+        track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        updateDots();
+    }
+    
+    // Previous slide button
+    prevButton.addEventListener('click', () => {
+        currentSlide = (currentSlide - 1 + slideCount) % slideCount;
+        goToSlide(currentSlide);
+    });
+    
+    // Next slide button
+    nextButton.addEventListener('click', () => {
+        currentSlide = (currentSlide + 1) % slideCount;
+        goToSlide(currentSlide);
+    });
+    
+    // Auto slide (optional)
+    let autoSlideInterval;
+    
+    function startAutoSlide() {
+        autoSlideInterval = setInterval(() => {
+            currentSlide = (currentSlide + 1) % slideCount;
+            goToSlide(currentSlide);
+        }, 7000); // Change slide every 7 seconds
+    }zs
+    
+    function stopAutoSlide() {
+        clearInterval(autoSlideInterval);
+    }
+    
+    // Start auto sliding
+    startAutoSlide();
+    
+    // Pause auto slide on hover
+    const slider = document.querySelector('.testimonials-slider');
+    slider.addEventListener('mouseenter', stopAutoSlide);
+    slider.addEventListener('mouseleave', startAutoSlide);
+    
+    // Handle swipe gestures for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    slider.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+    
+    slider.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+    
+    function handleSwipe() {
+        // Swipe threshold
+        const threshold = 50;
+        
+        if (touchEndX < touchStartX - threshold) {
+            // Swipe left - next slide
+            currentSlide = (currentSlide + 1) % slideCount;
+            goToSlide(currentSlide);
+        } else if (touchEndX > touchStartX + threshold) {
+            // Swipe right - previous slide
+            currentSlide = (currentSlide - 1 + slideCount) % slideCount;
+            goToSlide(currentSlide);
+        }
+    }
+    
+    // Add animation when slides enter viewport
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('.testimonial-card').forEach(item => {
+        observer.observe(item);
+    });
+});
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all FAQ elements
+    const faqItems = document.querySelectorAll('.faq-item');
+    const expandAllButton = document.querySelector('.faq-expand-all');
+    
+    // Initialize FAQ items with closed state
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        const answer = item.querySelector('.faq-answer');
+        
+        // Set initial states
+        question.setAttribute('aria-expanded', 'false');
+        answer.style.maxHeight = '0px';
+        
+        // Add click event listener
+        question.addEventListener('click', () => {
+            toggleFaqItem(item);
+        });
+        
+        // Add keyboard event for accessibility
+        question.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFaqItem(item);
+            }
+        });
+    });
+    
+    // Function to toggle a FAQ item
+    function toggleFaqItem(item) {
+        const question = item.querySelector('.faq-question');
+        const answer = item.querySelector('.faq-answer');
+        const isExpanded = question.getAttribute('aria-expanded') === 'true';
+        
+        // Toggle the current item
+        question.setAttribute('aria-expanded', !isExpanded);
+        
+        if (isExpanded) {
+            answer.style.maxHeight = '0px';
+        } else {
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+        }
+        
+        // Update expand all button state
+        updateExpandAllButton();
+    }
+    
+    // Function to toggle all FAQ items
+    function toggleAllFaqItems(expand) {
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            const answer = item.querySelector('.faq-answer');
+            
+            question.setAttribute('aria-expanded', expand);
+            
+            if (expand) {
+                answer.style.maxHeight = answer.scrollHeight + 'px';
+            } else {
+                answer.style.maxHeight = '0px';
+            }
+        });
+        
+        expandAllButton.setAttribute('aria-expanded', expand);
+    }
+    
+    // Function to update the expand all button state
+    function updateExpandAllButton() {
+        const allExpanded = Array.from(faqItems).every(item => 
+            item.querySelector('.faq-question').getAttribute('aria-expanded') === 'true'
+        );
+        
+        expandAllButton.setAttribute('aria-expanded', allExpanded);
+    }
+    
+    // Add click event for expand/collapse all button
+    expandAllButton.addEventListener('click', () => {
+        const isExpanded = expandAllButton.getAttribute('aria-expanded') === 'true';
+        toggleAllFaqItems(!isExpanded);
+    });
+    
+    // Handle window resize to adjust maxHeight
+    window.addEventListener('resize', () => {
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            const answer = item.querySelector('.faq-answer');
+            
+            if (question.getAttribute('aria-expanded') === 'true') {
+                // Temporarily collapse to get proper scrollHeight
+                answer.style.maxHeight = 'none';
+                const scrollHeight = answer.scrollHeight;
+                answer.style.maxHeight = scrollHeight + 'px';
+            }
+        });
+    });
+    
+    // SEO optimization - open FAQ item if URL hash matches
+    if (window.location.hash) {
+        const targetItem = document.querySelector(window.location.hash);
+        if (targetItem && targetItem.classList.contains('faq-item')) {
+            setTimeout(() => {
+                toggleFaqItem(targetItem);
+                targetItem.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+    }
+});
