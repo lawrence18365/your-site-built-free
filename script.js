@@ -594,84 +594,52 @@ function initFormValidation() {
         const handlerEndTime = performance.now();
         console.log(`Form submission handler took ${handlerEndTime - handlerStartTime}ms to execute`);
         logDebug(`Form submission handler took ${handlerEndTime - handlerStartTime}ms to execute`);
+// Send email using EmailJS
+        emailjs.send('service_stvkor9', 'template_kwz2kfx', formData, 'HjdXi5aEYt4K0Vluu')
+            .then(function(response) {
+                logDebug('Success: form submitted successfully', response.status, response.text);
+                
+                // Reset form
+                form.reset();
+                
+                // Reset validation styles
+                Object.values(formFields).forEach(field => {
+                    if (field) field.classList.remove('error');
+                });
+                
+                // Remove error messages
+                form.querySelectorAll('.error-message').forEach(el => el.remove());
+                
+                // Restore button state
+                if (buttonReference) {
+                    buttonReference.disabled = false;
+                    buttonReference.textContent = originalText;
+                }
+                
+                // Show success notification
+                showNotification('Thank you! Your form has been submitted successfully.');
 
-        // Send data to webhook
-        fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // 2. In-Depth Request Tracking (Add Headers)
-                'X-Submission-Time': Date.now().toString(), // Keep existing header
-                'X-Request-ID': formData.requestId,
-                'X-Page-Load-ID': formData.pageLoadId
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => {
-            logDebug(`Response received, status: ${response.status}`);
-            
-            // Consider any 2xx status as success
-            if (response.status >= 200 && response.status < 300) {
-                return { success: true };
-            } else {
-                throw new Error('Server returned error status: ' + response.status);
-            }
-        })
-        .then(data => {
-            logDebug('Success: form submitted successfully');
-            
-            // Reset form
-            form.reset();
-            
-            // Reset validation styles
-            Object.values(formFields).forEach(field => {
-                if (field) field.classList.remove('error');
+            }, function(error) {
+                logDebug(`Error: ${JSON.stringify(error)}`);
+                
+                // Restore button state
+                if (buttonReference) {
+                    buttonReference.disabled = false;
+                    buttonReference.textContent = originalText;
+                }
+                
+                // Show error notification
+                showNotification('Sorry, there was an error submitting your form. Please try again later.');
+
+            }).finally(() => {
+                // Reset submission status after a small delay
+                setTimeout(() => {
+                    isSubmitting = false;
+                    logDebug('Submission lock released');
+                }, 1000);
             });
             
-            // Remove error messages
-            form.querySelectorAll('.error-message').forEach(el => el.remove());
-            
-            // Restore button state
-            if (buttonReference) {
-                buttonReference.disabled = false;
-                buttonReference.textContent = originalText;
-            }
-            
-            // Show success notification
-            showNotification('Thank you! Your form has been submitted successfully.');
-        })
-        .catch((error) => {
-            logDebug(`Error: ${error.message}`);
-            
-            // Restore button state
-            if (buttonReference) {
-                buttonReference.disabled = false;
-                buttonReference.textContent = originalText;
-            }
-            
-            // Show error notification
-            showNotification('Sorry, there was an error submitting your form. Please try again later.');
-        })
-        .finally(() => {
-            // 4. Browser Performance Monitoring (Total Time)
-            const totalTime = performance.now() - handlerStartTime;
-            console.log(`Total form submission process took ${totalTime}ms`);
-            logDebug(`Total form submission process took ${totalTime}ms`);
-
-            // Log if this took unusually long
-            if (totalTime > 1000) {
-                console.warn(`Form submission took over 1 second (${totalTime}ms), which might indicate performance issues`);
-                logDebug(`WARN: Form submission took over 1 second (${totalTime}ms)`);
-            }
-
-            // Reset submission status after a small delay (existing logic)
-            setTimeout(() => {
-                isSubmitting = false;
-                logDebug('Submission lock released');
-            }, 1000); // Keep existing delay
-        });
-    });
-    
+       
     // Notification function
     function showNotification(message) {
         logDebug(`Notification: ${message}`);
