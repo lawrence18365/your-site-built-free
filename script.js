@@ -278,109 +278,71 @@ function initCountdownTimer() {
 /**
  * Form validation and submission handling
  */
+/**
+ * Form validation and submission handling
+ */
 function initFormValidation() {
-    console.log('initFormValidation called');
-    if (window.formValidationInitialized) {
-        console.error('Form validation already initialized.');
-        return;
-    }
-    window.formValidationInitialized = true;
-
     const form = document.getElementById('website-form');
     if (!form) {
         console.error('Form not found');
         return;
     }
 
-    if (form._hasSubmitListener) {
-        console.error('Form already has a submit listener attached!');
-        return;
-    }
-    form._hasSubmitListener = true;
-
     let isSubmitting = false;
-
-    const formFields = {
-        name: document.getElementById('name'),
-        email: document.getElementById('email'),
-        phone: document.getElementById('phone'),
-        business: document.getElementById('business'),
-        message: document.getElementById('message')
-    };
-
-    if (!formFields.name || !formFields.email || !formFields.phone || !formFields.business) {
-        console.log('Required form fields not found');
-        return;
-    }
-
-    function validateField(field, isValid, errorMessage) {
-        const errorEl = field.nextElementSibling?.classList.contains('error-message') ? field.nextElementSibling : null;
-        if (!isValid) {
-            field.classList.add('error');
-            if (!errorEl) {
-                const newErrorEl = document.createElement('div');
-                newErrorEl.className = 'error-message';
-                newErrorEl.textContent = errorMessage;
-                field.parentNode.insertBefore(newErrorEl, field.nextSibling);
-            }
-        } else {
-            field.classList.remove('error');
-            if (errorEl) errorEl.remove();
-        }
-        return isValid;
-    }
 
     form.addEventListener('submit', function(event) {
         event.preventDefault();
 
         if (isSubmitting) {
-            console.log('Submission already in progress, preventing duplicate');
+            console.warn('Submission already in progress.');
             return;
         }
-        
-        isSubmitting = true;
-        
-        const formData = {
-            name: formFields.name.value.trim(),
-            email: formFields.email.value.trim(),
-            phone: formFields.phone.value.trim(),
-            business: formFields.business.value.trim(),
-            message: formFields.message ? formFields.message.value.trim() : ''
-        };
 
+        // --- Basic Validation ---
         let isValid = true;
-        if (!formData.name) isValid = validateField(formFields.name, false, 'Name is required') && isValid;
-        if (!formData.email || !isValidEmail(formData.email)) isValid = validateField(formFields.email, false, 'Please enter a valid email address') && isValid;
-        if (!formData.phone) isValid = validateField(formFields.phone, false, 'Phone number is required') && isValid;
-        if (!formData.business) isValid = validateField(formFields.business, false, 'Business name is required') && isValid;
-        
+        const requiredFields = ['name', 'email', 'phone', 'business'];
+        requiredFields.forEach(id => {
+            const field = document.getElementById(id);
+            if (!field.value.trim()) {
+                isValid = false;
+                console.error(`${id} is required.`);
+                // You can add visual feedback for the user here if you want
+                field.style.border = '2px solid red'; 
+            } else {
+                field.style.border = ''; // Reset border
+            }
+        });
+
         if (!isValid) {
-            isSubmitting = false;
+            alert('Please fill out all required fields.');
             return;
         }
-        
+
+        isSubmitting = true;
         const submitButton = form.querySelector('button[type="submit"]');
-        const buttonOriginalText = submitButton.textContent;
+        const originalButtonText = submitButton.textContent;
         submitButton.disabled = true;
         submitButton.textContent = 'Sending...';
 
-        // --- THIS IS THE CORRECTED SECTION ---
-        // Send email using EmailJS
-        emailjs.send('service_stvkor9', 'template_kwz2kfx', formData, 'HjdXi5aEYt4K0Vluu')
+        // --- Use emailjs.sendForm ---
+        // This method is often simpler as it reads directly from the form.
+        // Make sure your form's <input> elements have a `name` attribute
+        // that matches your template variables (e.g., <input id="name" name="name">)
+        
+        emailjs.sendForm('service_stvkor9', 'template_kwz2kfx', this, 'HjdXi5aEYt4K0Vluu')
             .then(function(response) {
                 console.log('SUCCESS!', response.status, response.text);
+                alert('Thank you! Your form has been submitted successfully.');
                 form.reset();
-                form.querySelectorAll('.error-message').forEach(el => el.remove());
-                Object.values(formFields).forEach(field => field.classList.remove('error'));
-                showNotification('Thank you! Your form has been submitted successfully.');
             }, function(error) {
                 console.log('FAILED...', error);
-                showNotification('Sorry, there was an error submitting your form. Please try again later.');
+                alert('Sorry, there was an error submitting your form. Please try again later.');
             })
-            .finally(() => {
-                submitButton.disabled = false;
-                submitButton.textContent = buttonOriginalText;
+            .finally(function() {
+                // This block will run whether it succeeded or failed
                 isSubmitting = false;
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
             });
     });
 }
