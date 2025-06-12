@@ -274,13 +274,11 @@ function initCountdownTimer() {
     updateCountdown();
     const timerInterval = setInterval(updateCountdown, 1000);
 }
+/**
+ * CORRECTED EmailJS Form Handler - Using Your Actual Template ID and Variables
+ * Replace your initFormValidation function with this corrected version
+ */
 
-/**
- * Form validation and submission handling
- */
-/**
- * Form validation and submission handling
- */
 function initFormValidation() {
     const form = document.getElementById('website-form');
     if (!form) {
@@ -298,25 +296,55 @@ function initFormValidation() {
             return;
         }
 
-        // --- Basic Validation ---
+        // Enhanced validation
         let isValid = true;
         const requiredFields = ['name', 'email', 'phone', 'business'];
+        
+        // Clear previous error styling
         requiredFields.forEach(id => {
             const field = document.getElementById(id);
-            if (!field.value.trim()) {
-                isValid = false;
-                console.error(`${id} is required.`);
-                // You can add visual feedback for the user here if you want
-                field.style.border = '2px solid red'; 
-            } else {
-                field.style.border = ''; // Reset border
+            if (field) {
+                field.style.border = '';
+                field.classList.remove('error');
             }
         });
 
+        // Validate required fields
+        requiredFields.forEach(id => {
+            const field = document.getElementById(id);
+            if (!field || !field.value.trim()) {
+                isValid = false;
+                console.error(`${id} is required.`);
+                if (field) {
+                    field.style.border = '2px solid #ef4444';
+                    field.classList.add('error');
+                }
+            }
+        });
+
+        // Email validation
+        const emailField = document.getElementById('email');
+        if (emailField && emailField.value.trim() && !isValidEmail(emailField.value)) {
+            isValid = false;
+            emailField.style.border = '2px solid #ef4444';
+            console.error('Invalid email format');
+        }
+
         if (!isValid) {
-            alert('Please fill out all required fields.');
+            showNotification('Please fill out all required fields correctly.', 'error');
             return;
         }
+
+        // Prepare form data - CORRECTED to match your template variables
+        const formData = new FormData(form);
+        const templateParams = {
+            // These variable names match your EmailJS template exactly
+            name: formData.get('name'),           // {{name}} in template
+            email: formData.get('email'),         // {{email}} in template  
+            phone: formData.get('phone'),         // {{phone}} in template
+            business: formData.get('business'),   // {{business}} in template
+            message: formData.get('message') || 'No additional information provided.', // {{message}} in template
+        };
 
         isSubmitting = true;
         const submitButton = form.querySelector('button[type="submit"]');
@@ -324,63 +352,171 @@ function initFormValidation() {
         submitButton.disabled = true;
         submitButton.textContent = 'Sending...';
 
-        // --- Use emailjs.sendForm ---
-        // This method is often simpler as it reads directly from the form.
-        // Make sure your form's <input> elements have a `name` attribute
-        // that matches your template variables (e.g., <input id="name" name="name">)
-        
-        emailjs.sendForm('service_stvkqx9', 'template_gy6f2ls', this, 'HjdXi5aEYt4K0Vluu')
-            .then(function(response) {
-                console.log('SUCCESS!', response.status, response.text);
-                alert('Thank you! Your form has been submitted successfully.');
-                form.reset();
-            }, function(error) {
-                console.log('FAILED...', error);
-                alert('Sorry, there was an error submitting your form. Please try again later.');
-            })
-            .finally(function() {
-                // This block will run whether it succeeded or failed
-                isSubmitting = false;
-                submitButton.disabled = false;
-                submitButton.textContent = originalButtonText;
+        console.log('Sending email with corrected params:', templateParams);
+
+        // Using your ACTUAL template ID: template_jpss305
+        emailjs.send(
+            'service_stvkqx9',           // ✅ Your service ID (correct)
+            'template_jpss305',          // ✅ CORRECTED template ID  
+            templateParams,              // ✅ CORRECTED variable names
+            'HjdXi5aEYt4K0Vluu'         // ✅ Your public key (correct)
+        )
+        .then(function(response) {
+            console.log('SUCCESS!', response.status, response.text);
+            showNotification('Thank you! Your application has been submitted successfully. We\'ll be in touch within 24-48 hours.', 'success');
+            form.reset();
+            
+            // Optional: Google Analytics tracking
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'form_submit', { 
+                    'event_category': 'engagement',
+                    'event_label': 'website_application'
+                });
+            }
+        })
+        .catch(function(error) {
+            console.error('FAILED...', error);
+            let errorMessage = 'Sorry, there was an error submitting your form. ';
+            
+            if (error.status === 400) {
+                errorMessage += 'Please check your information and try again.';
+            } else if (error.status === 401) {
+                errorMessage += 'Service temporarily unavailable.';
+            } else {
+                errorMessage += 'Please try again later or contact us directly at lawrencebrennan@gmail.com';
+            }
+            
+            showNotification(errorMessage, 'error');
+            
+            // Detailed error logging
+            console.error('Detailed error:', {
+                status: error.status,
+                text: error.text,
+                templateParams: templateParams,
+                serviceId: 'service_stvkqx9',
+                templateId: 'template_jpss305'
             });
+        })
+        .finally(function() {
+            isSubmitting = false;
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+        });
     });
 }
 
-
 /**
- * Show notification with custom message
- */
-function showNotification(message = 'Operation completed successfully') {
-    let notification = document.getElementById('notification');
-    
-    if (!notification) {
-        notification = document.createElement('div');
-        notification.id = 'notification';
-        notification.className = 'notification';
-        document.body.appendChild(notification);
-    }
-    
-    notification.textContent = message;
-    notification.classList.add('show');
-    
-    setTimeout(function() {
-        notification.classList.remove('show');
-    }, 5000);
-}
-
-/**
- * Email validation helper
+ * Enhanced email validation
  */
 function isValidEmail(email) {
-    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(String(email).toLowerCase());
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim().toLowerCase());
 }
 
-
 /**
- * Floating CTA button functionality
+ * Enhanced notification system
  */
+function showNotification(message, type = 'success') {
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    
+    const icon = type === 'success' ? 
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>' :
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+    
+    notification.innerHTML = `
+        <div class="notification-icon">${icon}</div>
+        <div class="notification-content">
+            <h4>${type === 'success' ? 'Success!' : 'Error'}</h4>
+            <p>${message}</p>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Add styles if they don't exist
+    if (!document.querySelector('#notification-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'notification-styles';
+        styles.textContent = `
+            .notification {
+                position: fixed;
+                top: 30px;
+                right: 30px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                z-index: 1000;
+                transform: translateX(200%);
+                transition: transform 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 20px;
+                max-width: 400px;
+                border-left: 4px solid;
+            }
+            .notification-success {
+                border-left-color: #10b981;
+                color: #0f766e;
+            }
+            .notification-error {
+                border-left-color: #ef4444;
+                color: #dc2626;
+            }
+            .notification.show {
+                transform: translateX(0);
+            }
+            .notification-icon {
+                flex-shrink: 0;
+            }
+            .notification-content h4 {
+                margin: 0 0 5px 0;
+                font-size: 16px;
+                font-weight: 600;
+            }
+            .notification-content p {
+                margin: 0;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+            .notification-close {
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                opacity: 0.7;
+                padding: 0;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .notification-close:hover {
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Trigger animation
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Auto-remove after 8 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 8000);
+}
+
 function initFloatingCTA() {
     const floatingCta = document.getElementById('floating-cta');
     const heroSection = document.getElementById('hero');
