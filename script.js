@@ -329,7 +329,7 @@ function initFormValidation() {
         // Make sure your form's <input> elements have a `name` attribute
         // that matches your template variables (e.g., <input id="name" name="name">)
         
-        emailjs.sendForm('service_stvkqx9', 'template_kwz2kfx', this, 'HjdXi5aEYt4K0Vluu')
+        emailjs.sendForm('service_stvkqx9', 'template_gy6f2ls', this, 'HjdXi5aEYt4K0Vluu')
             .then(function(response) {
                 console.log('SUCCESS!', response.status, response.text);
                 alert('Thank you! Your form has been submitted successfully.');
